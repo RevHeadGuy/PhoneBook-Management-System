@@ -1,64 +1,53 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <iomanip>
-#include <limits>
-
 using namespace std;
 
-// Structure for a contact
+const string RESET = "\033[0m";        
+const string BG_BLUE = "\033[44m";    
+const string BG_GREEN = "\033[42m";   
+const string BG_RED = "\033[41m";     
+const string BG_YELLOW = "\033[43m";  
+const string BOLD = "\033[1m";      
 struct Contact {
     string name;
     string number;
     string email;
-    Contact* prev;  // Pointer to the previous node
-    Contact* next;  // Pointer to the next node
+    Contact* prev;  
+    Contact* next; 
 };
-
-// Head and tail pointers for the doubly linked list
 Contact* head = nullptr;
 Contact* tail = nullptr;
 
-// Function Prototypes
-void addContact();
-void displayContacts();
-void searchContacts();
-void modifyContact();
-void deleteContact();
-void loadFromFile();
-void saveToFile();
+void add();
+void display();
+void searchcontact();
+void modifycontact();
+void deletecontact();
+void loadfromfile();
+void savetofile();
 bool isValidPhoneNumber(const string& number);
 bool isValidEmail(const string& email);
-void clearInputBuffer();
 void freeMemory();
 
-// Function to add a contact to the doubly linked list
-void addContact() {
-    Contact* newContact = new Contact();
+void add() {
+    Contact* newContact = new Contact(); 
     newContact->prev = nullptr;
     newContact->next = nullptr;
-
-    cout << "Enter contact name: ";
+    cout << "Enter name: ";
     getline(cin >> ws, newContact->name);
-
     cout << "Enter phone number (10 digits): ";
-    string phone;
-    getline(cin, phone);
-    while (!isValidPhoneNumber(phone)) {
+    getline(cin, newContact->number);
+    while (!isValidPhoneNumber(newContact->number)) {
         cout << "Invalid phone number. Please enter again: ";
-        getline(cin, phone);
+        getline(cin, newContact->number);
     }
-    newContact->number = phone;
-
-    cout << "Enter email (e.g., example@domain.com): ";
-    string email;
-    getline(cin, email);
-    while (!isValidEmail(email)) {
+    cout << "Enter email: ";
+    getline(cin, newContact->email);
+    while (!isValidEmail(newContact->email)) {
         cout << "Invalid email. Please enter again: ";
-        getline(cin, email);
+        getline(cin, newContact->email);
     }
-    newContact->email = email;
-
     if (head == nullptr) {
         head = tail = newContact;
     } else {
@@ -66,150 +55,117 @@ void addContact() {
         newContact->prev = tail;
         tail = newContact;
     }
-
-    cout << "Contact added successfully." << endl;
+    cout << BG_GREEN << "Contact added successfully!\n" << RESET;
 }
-
-// Function to display all contacts
-void displayContacts() {
+void display() {
     if (head == nullptr) {
-        cout << "Phone book is empty." << endl;
+        cout << "No contacts found.\n";
         return;
     }
-
-    cout << left << setw(20) << "Name" << setw(20) << "Number" << setw(30) << "Email" << endl;
-    cout << string(70, '-') << endl;
-
     Contact* current = head;
+    cout << "\nContacts:\n";
     while (current != nullptr) {
-        cout << left << setw(20) << current->name
-             << setw(20) << current->number
-             << setw(30) << current->email << endl;
+        cout << "Name: " << current->name << endl;
+        cout << "Phone: " << current->number << endl;
+        cout << "Email: " << current->email << endl;
+        cout << "------------------\n";
         current = current->next;
     }
 }
-
-// Function to search for a contact
-void searchContacts() {
+void searchcontacts() {
     if (head == nullptr) {
-        cout << "Phone book is empty." << endl;
+        cout << "No contacts found.\n";
         return;
     }
-
     string query;
-    cout << "Enter name or number to search: ";
+    cout << "Enter name or phone number to search: ";
     getline(cin >> ws, query);
-
     Contact* current = head;
     bool found = false;
-
-    cout << left << setw(20) << "Name" << setw(20) << "Number" << setw(30) << "Email" << endl;
-    cout << string(70, '-') << endl;
-
     while (current != nullptr) {
-        if (current->name.find(query) != string::npos || current->number.find(query) != string::npos) {
-            cout << left << setw(20) << current->name
-                 << setw(20) << current->number
-                 << setw(30) << current->email << endl;
+        if (current->name == query || current->number == query) {
+            cout << "Contact Found:\n";
+            cout << "Name: " << current->name << endl;
+            cout << "Phone: " << current->number << endl;
+            cout << "Email: " << current->email << endl;
             found = true;
+            break;
         }
         current = current->next;
     }
-
     if (!found) {
-        cout << "No contacts found matching the query." << endl;
+        cout << "No contact found matching the query.\n";
     }
 }
-
-// Function to modify a contact
-void modifyContact() {
+void modifycontact() {
     if (head == nullptr) {
-        cout << "Phone book is empty." << endl;
+        cout << "No contacts found.\n";
         return;
     }
-
     string name;
     cout << "Enter the name of the contact to modify: ";
     getline(cin >> ws, name);
-
     Contact* current = head;
     while (current != nullptr && current->name != name) {
         current = current->next;
     }
-
     if (current == nullptr) {
-        cout << "No contact found with the given name." << endl;
+        cout << "No contact found with the given name.\n";
         return;
     }
-
-    cout << "Current contact details:" << endl;
+    cout << "Current details:\n";
     cout << "Name: " << current->name << endl;
-    cout << "Number: " << current->number << endl;
+    cout << "Phone: " << current->number << endl;
     cout << "Email: " << current->email << endl;
-
     cout << "Enter new name (leave blank to keep current): ";
     string newName;
     getline(cin >> ws, newName);
     if (!newName.empty()) current->name = newName;
-
-    cout << "Enter new number (leave blank to keep current): ";
+    cout << "Enter new phone number (leave blank to keep current): ";
     string newNumber;
     getline(cin, newNumber);
     if (!newNumber.empty() && isValidPhoneNumber(newNumber)) current->number = newNumber;
-
     cout << "Enter new email (leave blank to keep current): ";
     string newEmail;
     getline(cin, newEmail);
     if (!newEmail.empty() && isValidEmail(newEmail)) current->email = newEmail;
-
-    cout << "Contact modified successfully." << endl;
+    cout << "Contact updated successfully.\n";
 }
-
-// Function to delete a contact
-void deleteContact() {
+void deletecontact() {
     if (head == nullptr) {
-        cout << "Phone book is empty." << endl;
+        cout << "No contacts found.\n";
         return;
     }
-
     string name;
     cout << "Enter the name of the contact to delete: ";
     getline(cin >> ws, name);
-
     Contact* current = head;
     while (current != nullptr && current->name != name) {
         current = current->next;
     }
-
     if (current == nullptr) {
-        cout << "No contact found with the given name." << endl;
+        cout << BG_RED << "No contact found with the given name.\n" << RESET;
         return;
     }
-
     if (current == head) {
         head = current->next;
         if (head != nullptr) head->prev = nullptr;
     } else {
         current->prev->next = current->next;
     }
-
     if (current == tail) {
         tail = current->prev;
         if (tail != nullptr) tail->next = nullptr;
     }
-
     delete current;
-    cout << "Contact deleted successfully." << endl;
+    cout << "Contact deleted successfully.\n";
 }
-
-// Function to load contacts from a file
-void loadFromFile() {
-    ifstream file("contacts.txt");
+void loadfromfile() {
+    ifstream file("contacts.rtf");
     if (!file.is_open()) {
-        cout << "Unable to open file. Starting with an empty phone book." << endl;
+        cout << "No saved contacts found. Starting fresh.\n";
         return;
     }
-
     while (!file.eof()) {
         Contact* newContact = new Contact();
         getline(file, newContact->name);
@@ -221,7 +177,6 @@ void loadFromFile() {
         getline(file, newContact->email);
         newContact->prev = nullptr;
         newContact->next = nullptr;
-
         if (head == nullptr) {
             head = tail = newContact;
         } else {
@@ -231,17 +186,13 @@ void loadFromFile() {
         }
     }
     file.close();
-    cout << "Contacts loaded from file." << endl;
 }
-
-// Function to save contacts to a file
-void saveToFile() {
+void savetofile() {
     ofstream file("contacts.txt");
     if (!file.is_open()) {
-        cout << "Unable to open file for saving." << endl;
+        cout << "Error saving contacts.\n";
         return;
     }
-
     Contact* current = head;
     while (current != nullptr) {
         file << current->name << endl;
@@ -250,79 +201,49 @@ void saveToFile() {
         current = current->next;
     }
     file.close();
-    cout << "Contacts saved to file." << endl;
+    cout << "Contacts saved.\n";
 }
-
-// Function to validate phone numbers
 bool isValidPhoneNumber(const string& number) {
     return number.length() == 10 && all_of(number.begin(), number.end(), ::isdigit);
 }
-
-// Function to validate email addresses
 bool isValidEmail(const string& email) {
     size_t atPos = email.find('@');
     size_t dotPos = email.find('.', atPos);
     return atPos != string::npos && dotPos != string::npos && dotPos > atPos;
 }
-
-// Function to clear the input buffer
-void clearInputBuffer() {
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-}
-
-// Function to free dynamically allocated memory
 void freeMemory() {
-    Contact* current = head;
-    while (current != nullptr) {
-        Contact* toDelete = current;
-        current = current->next;
+    while (head != nullptr) {
+        Contact* toDelete = head;
+        head = head->next;
         delete toDelete;
     }
 }
-
-// Main function
 int main() {
-    loadFromFile();
-
+    loadfromfile();
     int choice;
     while (true) {
-        cout << "\nPhone Book Management System\n";
-        cout << "1. Add Contact\n";
-        cout << "2. Display Contacts\n";
-        cout << "3. Search Contacts\n";
-        cout << "4. Modify Contact\n";
-        cout << "5. Delete Contact\n";
-        cout << "6. Save and Exit\n";
+       cout << BOLD << BG_BLUE << "\nPhone Book Management System" << RESET << endl;
+       cout << BG_GREEN << "1. Add Contact" << RESET << endl;
+cout << BG_GREEN << "2. Display Contacts" << RESET << endl;
+cout << BG_GREEN << "3. Search Contacts" << RESET << endl;
+cout << BG_GREEN << "4. Modify Contact" << RESET << endl;
+cout << BG_GREEN << "5. Delete Contact" << RESET << endl;
+cout << BG_RED << "6. Save and Exit" << RESET << endl;
         cout << "Enter your choice: ";
-
-        while (!(cin >> choice)) {
-            cout << "Invalid input. Please enter a number between 1 and 6: ";
-            clearInputBuffer();
-        }
-
+        cin >> choice;
+        cin.ignore();
         switch (choice) {
-            case 1:
-                addContact();
-                break;
-            case 2:
-                displayContacts();
-                break;
-            case 3:
-                searchContacts();
-                break;
-            case 4:
-                modifyContact();
-                break;
-            case 5:
-                deleteContact();
-                break;
+            case 1: add(); break;
+            case 2: display(); break;
+            case 3: searchcontacts(); break;
+            case 4: modifycontact(); break;
+            case 5: deletecontact(); break;
             case 6:
-                saveToFile();
+                savetofile();
                 freeMemory();
                 return 0;
             default:
-                cout << "Invalid choice. Please try again." << endl;
+                cout << "Invalid choice. Try again.\n";
         }
     }
 }
